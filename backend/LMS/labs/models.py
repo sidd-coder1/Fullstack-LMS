@@ -1,182 +1,150 @@
 from django.db import models
-from django.utils import timezone
+from django.contrib.auth.models import AbstractUser
 
-# Create your models here.
+# ------------------------------
+# 1) Custom User (with Roles)
+# ------------------------------
 
-# -----------------------------
-# 1) Role
-# -----------------------------
-class Role(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+class User(AbstractUser):
+    ROLE_CHOICES = (
+        ('admin', 'Admin/Professor'),
+        ('technician', 'Technician/Assistant'),
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='technician')
+    profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
 
-    def __str__(self):
-        return self.name
-
-
-# -----------------------------
-# 2) User Account
-# -----------------------------
-class UserAccount(models.Model):
-    username = models.CharField(max_length=150, unique=True)
-    email = models.EmailField(max_length=254, unique=True)
-    password_hash = models.TextField()
-    full_name = models.CharField(max_length=255, blank=True, null=True)
-    phone = models.CharField(max_length=32, blank=True, null=True)
-    role = models.ForeignKey(Role, on_delete=models.RESTRICT)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name='custom_users',
+        blank=True,
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='custom_users_permissions',
+        blank=True,
+    )
 
     def __str__(self):
-        return self.username
+        return f"{self.username} ({self.role})"
 
 
-# -----------------------------
-# 3) Lab
-# -----------------------------
+# ------------------------------
+# 2) Lab Model
+# ------------------------------
 class Lab(models.Model):
-    lab_code = models.CharField(max_length=50, unique=True, blank=True, null=True)
-    name = models.CharField(max_length=255)
-    location = models.TextField(blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
-    lab_head = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, blank=True, null=True)
-    fans = models.IntegerField(default=0)
-    lights = models.IntegerField(default=0)
-    created_at = models.DateTimeField(default=timezone.now)
+    name = models.CharField(max_length=100, unique=True)
+    location = models.CharField(max_length=200, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
-    
-    def pc_count(self):
-        return self.pc_set.count()   
 
 
-# -----------------------------
-# 4) PC
-# -----------------------------
+# -------------------------------
+# 3) PC model
+# -------------------------------
 class PC(models.Model):
-    lab = models.ForeignKey(Lab, on_delete=models.CASCADE)
-    asset_tag = models.CharField(max_length=100, unique=True, blank=True, null=True)
-    hostname = models.CharField(max_length=150, blank=True, null=True)
-    serial_number = models.CharField(max_length=150, blank=True, null=True)
-    ip_address = models.GenericIPAddressField(blank=True, null=True)
-    mac_address = models.CharField(max_length=32, blank=True, null=True)
-    manufacturer = models.CharField(max_length=100, blank=True, null=True)
-    model = models.CharField(max_length=100, blank=True, null=True)
-    cpu = models.CharField(max_length=200, blank=True, null=True)
-    cpu_cores = models.IntegerField(blank=True, null=True)
-    ram_mb = models.IntegerField(blank=True, null=True)
-    storage_gb = models.IntegerField(blank=True, null=True)
-    os_name = models.CharField(max_length=100, blank=True, null=True)
-    os_version = models.CharField(max_length=100, blank=True, null=True)
-    purchased_on = models.DateField(blank=True, null=True)
-    warranty_until = models.DateField(blank=True, null=True)
-    is_defective = models.BooleanField(default=False)
-    defective_reason = models.TextField(blank=True, null=True)
-    last_checked_at = models.DateTimeField(blank=True, null=True)
-    created_at = models.DateTimeField(default=timezone.now)
+    lab = models.ForeignKey(Lab, on_delete=models.CASCADE, related_name='pcs')
+    name = models.CharField(max_length=100)
+    status = models.CharField(max_length=50)
+    brand = models.CharField(max_length=100, blank=True, null=True)
+    serial_number = models.CharField(max_length=100, blank=True, null=True, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+# ------------------------------
+# 4) Equipment (All Items)
+# ------------------------------
+class Equipment(models.Model):
+    EQUIPMENT_TYPES = (
+        ('PC', 'PC'),
+        ('MONITOR', 'Monitor'),
+        ('KEYBOARD', 'Keyboard'),
+        ('MOUSE', 'Mouse'),
+        ('ROUTER', 'Router'),
+        ('SWITCH', 'Switch'),
+        ('SERVER', 'Server'),
+        ('FAN', 'Fan'),
+        ('LIGHT', 'Light/Bulb'),
+        ('OTHER', 'Other'),
+    )
+    STATUS_CHOICES = (
+        ('working', 'Working'),
+        ('not_working', 'Not Working'),
+        ('under_repair', 'Under Repair'),
+    )
+
+    lab = models.ForeignKey(Lab, on_delete=models.CASCADE, related_name="equipments")
+    equipment_type = models.CharField(max_length=20, choices=EQUIPMENT_TYPES)
+    brand = models.CharField(max_length=100, blank=True, null=True)
+    model_name = models.CharField(max_length=100, blank=True, null=True)
+    serial_number = models.CharField(max_length=100, blank=True, null=True, unique=True)
+    location_in_lab = models.CharField(max_length=200, blank=True, null=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='working')
+    added_on = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.hostname or f"PC-{self.id}"
+        return f"{self.equipment_type} - {self.model_name or 'Unknown'} ({self.status})"
 
-# -----------------------------
-# 5) Maintenance Request
-# -----------------------------
-class MaintenanceRequest(models.Model):
-    PRIORITY_CHOICES = [
-        (1, 'High'),
-        (2, 'Normal'),
-        (3, 'Low'),
-    ]
-    STATUS_CHOICES = [
-        ('open', 'Open'),
-        ('in_progress', 'In Progress'),
-        ('closed', 'Closed'),
-    ]
 
-    pc = models.ForeignKey(PC, on_delete=models.SET_NULL, blank=True, null=True)
-    requested_by = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, blank=True, null=True, related_name='requested_maintenance')
-    assigned_to = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, blank=True, null=True, related_name='assigned_maintenance')
-    title = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    priority = models.SmallIntegerField(choices=PRIORITY_CHOICES, default=2)
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='open')
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)
-    resolved_at = models.DateTimeField(blank=True, null=True)
+# ------------------------------
+# 5) Software installed on PCs
+# ------------------------------
+class Software(models.Model):
+    pc = models.ForeignKey(
+        Equipment,
+        on_delete=models.CASCADE,
+        related_name="installed_software",
+        limit_choices_to={'equipment_type': 'PC'}
+    )
+    name = models.CharField(max_length=100)
+    version = models.CharField(max_length=50, blank=True, null=True)
+    license_key = models.CharField(max_length=200, blank=True, null=True)
+    expiry_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
-        return self.title
+        return f"{self.name} ({self.version}) - PC: {self.pc.id}"
 
 
-# -----------------------------
-# 6) Booking
-# -----------------------------
-class Booking(models.Model):
-    STATUS_CHOICES = [
-        ('confirmed', 'Confirmed'),
-        ('cancelled', 'Cancelled'),
+# ------------------------------
+# 6) Maintenance Logs
+# ------------------------------
+class MaintenanceLog(models.Model):
+    STATUS_CHOICES = (
         ('pending', 'Pending'),
-    ]
+        ('fixed', 'Fixed'),
+    )
 
-    pc = models.ForeignKey(PC, on_delete=models.SET_NULL, blank=True, null=True)
-    lab = models.ForeignKey(Lab, on_delete=models.SET_NULL, blank=True, null=True)
-    booked_by = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, blank=True, null=True)
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
-    purpose = models.TextField(blank=True, null=True)
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='confirmed')
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        constraints = [
-            models.CheckConstraint(check=models.Q(end_time__gt=models.F('start_time')), name='check_end_after_start')
-        ]
+    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name="maintenance_logs")
+    reported_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="reported_issues")
+    fixed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="fixed_issues")
+    issue_description = models.TextField(blank=True, null=True)
+    status_before = models.CharField(max_length=20, choices=Equipment.STATUS_CHOICES)
+    status_after = models.CharField(max_length=20, choices=Equipment.STATUS_CHOICES, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    reported_on = models.DateTimeField(auto_now_add=True)
+    fixed_on = models.DateTimeField(blank=True, null=True)
+    remarks = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Booking {self.id}"
+        return f"Issue on {self.equipment} - {self.status}"
 
 
-# -----------------------------
-# 7) Class Period
-# -----------------------------
-class ClassPeriod(models.Model):
-    lab = models.ForeignKey(Lab, on_delete=models.CASCADE)
-    pc = models.ForeignKey(PC, on_delete=models.SET_NULL, blank=True, null=True)
-    subject = models.CharField(max_length=255)
-    instructor = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, blank=True, null=True)
-    day_of_week = models.PositiveSmallIntegerField()  # 0=Sunday ... 6=Saturday
-    period_start = models.TimeField()
-    period_end = models.TimeField()
-    recurring = models.BooleanField(default=True)
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ('lab', 'day_of_week', 'period_start', 'period_end')
-        constraints = [
-            models.CheckConstraint(check=models.Q(day_of_week__gte=0, day_of_week__lte=6), name='check_day_of_week')
-        ]
+# ------------------------------
+# 7) Inventory Table (for Dashboard)
+# ------------------------------
+class Inventory(models.Model):
+    equipment_type = models.CharField(max_length=20, choices=Equipment.EQUIPMENT_TYPES)
+    total_quantity = models.IntegerField(default=0)
+    working_quantity = models.IntegerField(default=0)
+    not_working_quantity = models.IntegerField(default=0)
+    under_repair_quantity = models.IntegerField(default=0)
+    lab = models.ForeignKey(Lab, on_delete=models.CASCADE, related_name="inventory")
 
     def __str__(self):
-        return f"{self.subject} ({self.day_of_week})"
-
-
-# -----------------------------
-# 8) PC Availability
-# -----------------------------
-class PCAvailability(models.Model):
-    pc = models.ForeignKey(PC, on_delete=models.CASCADE)
-    class_period = models.ForeignKey(ClassPeriod, on_delete=models.CASCADE)
-    is_available = models.BooleanField(default=False)
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ('pc', 'class_period')
-
-    def __str__(self):
-        return f"PC {self.pc.id} - Period {self.class_period.id}"
+        return f"{self.equipment_type} in {self.lab.name} - Total: {self.total_quantity}"

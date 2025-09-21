@@ -1,84 +1,73 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
-from .models import Lab, PC
-from .forms import LabForm, PCForm
-from django.urls import reverse_lazy
+from rest_framework import generics
+from rest_framework.permissions import AllowAny
+from .models import User, Lab, PC, Equipment, Software, MaintenanceLog, Inventory
+from .serializers import (
+    UserRegisterSerializer, LabSerializer, PCSerializer, EquipmentSerializer,
+    SoftwareSerializer, MaintenanceLogSerializer, InventorySerializer
+)
 
-# -------------------------
-# List Labs (Read)
-# -------------------------
-class LabListView(ListView):
-    model = Lab
-    template_name = "labs/lab_list.html"
-    context_object_name = "labs"
+# ------------------ User Registration ------------------
+class UserRegisterView(generics.CreateAPIView):
+    serializer_class = UserRegisterSerializer
+    permission_classes = [AllowAny]
 
-# -------------------------
-# Create Lab
-# -------------------------
-class LabCreateView(CreateView):
-    model = Lab
-    form_class = LabForm
-    template_name = 'labs/lab_form.html'
-    success_url = reverse_lazy('lab-list')
+# ------------------ Lab CRUD ------------------
+class LabListCreateView(generics.ListCreateAPIView):
+    queryset = Lab.objects.all()
+    serializer_class = LabSerializer
 
-# -------------------------
-# Update Lab
-# -------------------------
-class LabUpdateView(UpdateView):
-    model = Lab
-    form_class = LabForm
-    template_name = 'labs/lab_form.html'
-    success_url = reverse_lazy('lab-list')
+class LabRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Lab.objects.all()
+    serializer_class = LabSerializer
 
-# -------------------------
-# Delete Lab
-# -------------------------
-class LabDeleteView(DeleteView):
-    model = Lab
-    template_name = 'labs/lab_confirm_delete.html'
-    success_url = reverse_lazy('lab-list')
+# ------------------ PC CRUD ------------------
+class PCListCreateView(generics.ListCreateAPIView):
+    serializer_class = PCSerializer
 
-# -------------------------
-# Lab Detail View
-# -------------------------
+    def get_queryset(self):
+        lab_id = self.kwargs['lab_id']
+        return PC.objects.filter(lab_id=lab_id)
 
-class LabDetailView(DetailView):
-    model = Lab
-    template_name = "labs/lab_detail.html"
-    context_object_name = "lab"
+    def perform_create(self, serializer):
+        lab_id = self.kwargs['lab_id']
+        serializer.save(lab_id=lab_id)
 
-# ---------- PC CRUD ----------
-class PCCreateView(CreateView):
-    model = PC
-    form_class = PCForm
-    template_name = "labs/pc_form.html"
+class PCRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = PC.objects.all()
+    serializer_class = PCSerializer
 
-    def form_valid(self, form):
-        lab = get_object_or_404(Lab, pk=self.kwargs["lab_id"])
-        form.instance.lab = lab
-        return super().form_valid(form)
+# ------------------ Equipment CRUD ------------------
+class EquipmentListCreateView(generics.ListCreateAPIView):
+    queryset = Equipment.objects.all()
+    serializer_class = EquipmentSerializer
 
-    def get_success_url(self):
-        return reverse_lazy("lab-detail", kwargs={"pk": self.kwargs["lab_id"]})
+class EquipmentRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Equipment.objects.all()
+    serializer_class = EquipmentSerializer
 
+# ------------------ Software CRUD ------------------
+class SoftwareListCreateView(generics.ListCreateAPIView):
+    queryset = Software.objects.all()
+    serializer_class = SoftwareSerializer
 
-class PCUpdateView(UpdateView):
-    model = PC
-    form_class = PCForm
-    template_name = "labs/pc_form.html"
+class SoftwareRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Software.objects.all()
+    serializer_class = SoftwareSerializer
 
-    def get_success_url(self):
-        return reverse_lazy("lab-detail", kwargs={"pk": self.object.lab.pk})
+# ------------------ MaintenanceLog CRUD ------------------
+class MaintenanceLogListCreateView(generics.ListCreateAPIView):
+    queryset = MaintenanceLog.objects.all()
+    serializer_class = MaintenanceLogSerializer
 
+class MaintenanceLogRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = MaintenanceLog.objects.all()
+    serializer_class = MaintenanceLogSerializer
 
-class PCDeleteView(DeleteView):
-    model = PC
-    template_name = "labs/pc_confirm_delete.html"
+# ------------------ Inventory CRUD ------------------
+class InventoryListCreateView(generics.ListCreateAPIView):
+    queryset = Inventory.objects.all()
+    serializer_class = InventorySerializer
 
-    def get_success_url(self):
-        return reverse_lazy("lab-detail", kwargs={"pk": self.object.lab.pk})
-
-class PCDetailView(DetailView):
-    model = PC
-    template_name = "labs/pc_detail.html"
-    context_object_name = "pc"
+class InventoryRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Inventory.objects.all()
+    serializer_class = InventorySerializer
