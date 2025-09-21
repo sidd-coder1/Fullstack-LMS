@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Labs</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        a { text-decoration: none; color: #007bff; }
+        a:hover { text-decoration: underline; }
+        .actions a { margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <h1>All Labs</h1>
+    <p><a href="{% url 'lab-add' %}">Add New Lab</a></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Lab Code</th>
+                <th>Name</th>
+                <th>Location</th>
+                <th>Description</th>
+                <th>Lab Head</th>
+                <th>No. of PCs</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lab in labs %}
+            <tr>
+                <td>
+                    <a href="{% url 'lab-detail' lab.pk %}">
+                        {{ lab.lab_code }}
+                    </a>
+                </td>
+                <td>{{ lab.name }}</td>
+                <td>{{ lab.location }}</td>
+                <td>{{ lab.description|truncatewords:10 }}</td>
+                <td>{{ lab.lab_head }}</td>
+                <td>{{ lab.pc_count }}</td>
+                <td class="actions">
+                    <a href="{% url 'lab-edit' lab.pk %}">Edit</a>
+                    <a href="{% url 'lab-delete' lab.pk %}">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

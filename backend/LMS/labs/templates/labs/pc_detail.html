@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ pc.hostname|default:"PC Detail" }}</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        .pc-details { margin-bottom: 2em; }
+        .pc-details p { margin: 0.5em 0; }
+        .actions a { margin-right: 10px; text-decoration: none; color: #007bff; }
+        .actions a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="pc-details">
+        <h1>PC: {{ pc.hostname }}</h1>
+        <p><strong>Asset Tag:</strong> {{ pc.asset_tag }}</p>
+        <p><strong>Serial Number:</strong> {{ pc.serial_number }}</p>
+        <p><strong>IP Address:</strong> {{ pc.ip_address }}</p>
+        <p><strong>MAC Address:</strong> {{ pc.mac_address }}</p>
+        <p><strong>Manufacturer:</strong> {{ pc.manufacturer }}</p>
+        <p><strong>Model:</strong> {{ pc.model }}</p>
+        <p><strong>CPU:</strong> {{ pc.cpu }}</p>
+        <p><strong>CPU Cores:</strong> {{ pc.cpu_cores }}</p>
+        <p><strong>RAM:</strong> {{ pc.ram_mb }} MB</p>
+        <p><strong>Storage:</strong> {{ pc.storage_gb }} GB</p>
+        <p><strong>Operating System:</strong> {{ pc.os_name }} {{ pc.os_version }}</p>
+        <p><strong>Purchased On:</strong> {{ pc.purchased_on }}</p>
+        <p><strong>Warranty Until:</strong> {{ pc.warranty_until }}</p>
+        <p><strong>Defective:</strong> {{ pc.is_defective|yesno:"Yes,No" }}</p>
+        {% if pc.is_defective %}
+            <p><strong>Defective Reason:</strong> {{ pc.defective_reason }}</p>
+        {% endif %}
+    </div>
+
+    <div class="actions">
+        <a href="{% url 'pc-edit' pc.pk %}">Edit</a>
+        <a href="{% url 'pc-delete' pc.pk %}">Delete</a>
+        <a href="{% url 'lab-detail' pc.lab.pk %}">Back to Lab</a>
+    </div>
+</body>
+</html>
