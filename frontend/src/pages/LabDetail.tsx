@@ -109,9 +109,7 @@ const LabDetail: React.FC = () => {
           status: formData.status,
           brand: formData.brand?.trim() || undefined,
           serial_number: formData.serial_number?.trim() || undefined,
-          id: 0,
-          lab: labId,
-        } as any);
+        });
         setPcs((prev) => [created, ...prev]);
         setSuccess('PC created successfully');
       }

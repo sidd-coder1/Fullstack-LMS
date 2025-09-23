@@ -17,8 +17,12 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  InputAdornment,
+  Grid,
+  Chip,
+  Divider,
+  CardActions,
 } from '@mui/material';
-import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import { Add, Refresh, Edit, Delete, Search } from '@mui/icons-material';
 import { equipmentAPI, labsAPI, getToken } from '../services/api';
 import type { Equipment as EquipmentType, Lab } from '../types';
@@ -76,7 +80,6 @@ const Equipment: React.FC = () => {
   const loadAll = async () => {
     try {
       setLoading(true);
-      // Dev fallback: if using temporary dev token, show mock data
       const token = getToken();
       if (token && token.startsWith('dev_')) {
         setLabs([
@@ -129,13 +132,13 @@ const Equipment: React.FC = () => {
     setEditingId(row.id);
     setFormData({
       lab: row.lab,
-      equipment_type: row.equipment_type as any,
+      equipment_type: row.equipment_type,
       brand: row.brand || '',
       model_name: row.model_name || '',
       serial_number: row.serial_number || '',
       location_in_lab: row.location_in_lab || '',
       price: row.price ? String(row.price) : '',
-      status: row.status as any,
+      status: row.status,
     });
     setOpenForm(true);
   };
@@ -148,7 +151,7 @@ const Equipment: React.FC = () => {
     }
     try {
       setSaving(true);
-      const payload: any = {
+      const payload = {
         lab: formData.lab,
         equipment_type: formData.equipment_type,
         brand: formData.brand || undefined,
@@ -163,7 +166,7 @@ const Equipment: React.FC = () => {
         setItems((prev) => prev.map((x) => (x.id === editingId ? updated : x)));
         setSuccess('Equipment updated');
       } else {
-        const created = await equipmentAPI.create(payload);
+        const created = await equipmentAPI.create(payload as any);
         setItems((prev) => [created, ...prev]);
         setSuccess('Equipment created');
       }
@@ -217,7 +220,13 @@ const Equipment: React.FC = () => {
               placeholder="Brand, model or serial..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              InputProps={{ endAdornment: <Search fontSize="small" /> }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Search fontSize="small" />
+                  </InputAdornment>
+                )
+              }}
               sx={{ flex: 1 }}
             />
             <TextField
@@ -256,99 +265,118 @@ const Equipment: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Table */}
-      <Card>
-        <CardContent>
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
-              <CircularProgress />
-            </Box>
-          ) : filtered.length === 0 ? (
-            <Box sx={{ textAlign: 'center', color: 'text.secondary', py: 6 }}>
-              <Typography>No equipment found. Try changing filters or add new equipment.</Typography>
-            </Box>
-          ) : (
-            <Box sx={{ width: '100%' }}>
-              <DataGrid
-                autoHeight
-                rows={filtered}
-                getRowId={(r) => r.id}
-                columns={([
-                  { field: 'lab', headerName: 'Lab', flex: 1, valueGetter: (p: any) => labs.find((l) => l.id === p.row.lab)?.name || p.row.lab },
-                  { field: 'equipment_type', headerName: 'Type', flex: 1 },
-                  { field: 'brand', headerName: 'Brand', flex: 1, valueGetter: (p: any) => p.row.brand || '-' },
-                  { field: 'model_name', headerName: 'Model', flex: 1, valueGetter: (p: any) => p.row.model_name || '-' },
-                  { field: 'serial_number', headerName: 'Serial', flex: 1, valueGetter: (p: any) => p.row.serial_number || '-' },
-                  { field: 'status', headerName: 'Status', flex: 1, valueGetter: (p: any) => (p.row.status as string).replace('_', ' '),
-                    renderCell: (params: any) => (
-                      <Box sx={{ textTransform: 'capitalize' }}>{String(params.value)}</Box>
-                    )
+      {/* Content */}
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress />
+        </Box>
+      ) : filtered.length === 0 ? (
+        <Card>
+          <CardContent sx={{ textAlign: 'center', color: 'text.secondary', py: 8 }}>
+            <Typography variant="h6">
+              {items.length > 0 ? 'No equipment matches your search' : 'No equipment found'}
+            </Typography>
+            <Typography>
+              {items.length > 0 ? 'Try different filters.' : 'Click "Add Equipment" to create some.'}
+            </Typography>
+          </CardContent>
+        </Card>
+      ) : (
+        <Grid container spacing={3}>
+          {filtered.map((item) => (
+            <Grid item xs={12} sm={6} md={4} key={item.id}>
+              <Card
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  borderRadius: 3,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                  transition: 'transform 180ms ease, box-shadow 180ms ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
                   },
-                  {
-                    field: 'actions',
-                    headerName: 'Actions',
-                    sortable: false,
-                    filterable: false,
-                    align: 'right',
-                    headerAlign: 'right',
-                    width: 140,
-                    renderCell: (params: any) => (
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Tooltip title="Edit">
-                          <IconButton color="info" size="small" onClick={() => openEdit(params.row)}>
-                            <Edit fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton color="error" size="small" onClick={() => confirmDelete(params.row.id)}>
-                            <Delete fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    ),
-                  },
-                ] as GridColDef[])}
-                disableRowSelectionOnClick
-                pageSizeOptions={[5, 10, 25]}
-                initialState={{ pagination: { paginationModel: { pageSize: 10, page: 0 } } }}
-              />
-            </Box>
-          )}
-        </CardContent>
-      </Card>
+                }}
+              >
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                    <Typography variant="h6" component="div" sx={{ fontWeight: 600, mb: 0.5 }}>
+                      {item.brand || 'Generic'} {item.model_name}
+                    </Typography>
+                    <Chip
+                      label={item.status.replace('_', ' ')}
+                      color={item.status === 'working' ? 'success' : item.status === 'not_working' ? 'error' : 'warning'}
+                      size="small"
+                      sx={{ textTransform: 'capitalize' }}
+                    />
+                  </Stack>
+                  <Typography color="text.secondary" variant="body2" gutterBottom>
+                    {item.equipment_type}
+                  </Typography>
+                  <Divider sx={{ my: 1.5 }} />
+                  <Typography variant="body2">
+                    <strong>Lab:</strong> {labs.find(l => l.id === item.lab)?.name || 'N/A'}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Serial:</strong> {item.serial_number || '-'}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Location:</strong> {item.location_in_lab || '-'}
+                  </Typography>
+                </CardContent>
+                <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
+                  <Tooltip title="Edit">
+                    <IconButton color="info" size="small" onClick={() => openEdit(item)}>
+                      <Edit fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete">
+                    <IconButton color="error" size="small" onClick={() => confirmDelete(item.id)}>
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={openForm} onClose={() => setOpenForm(false)} fullWidth maxWidth="md">
         <DialogTitle>{editingId ? 'Edit Equipment' : 'Add Equipment'}</DialogTitle>
         <Box component="form" onSubmit={handleSave}>
           <DialogContent>
-            <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
-              <TextField select label="Lab" value={formData.lab} onChange={(e) => setFormData({ ...formData, lab: e.target.value === '' ? '' : Number(e.target.value) })} required fullWidth>
-                {labs.map((l) => (
-                  <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>
-                ))}
-              </TextField>
-              <TextField select label="Type" value={formData.equipment_type} onChange={(e) => setFormData({ ...formData, equipment_type: e.target.value as any })} required fullWidth>
-                {EQUIPMENT_TYPES.map((t) => (
-                  <MenuItem key={t} value={t}>{t}</MenuItem>
-                ))}
-              </TextField>
-            </Stack>
-            <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }} sx={{ mt: 2 }}>
-              <TextField label="Brand" value={formData.brand} onChange={(e) => setFormData({ ...formData, brand: e.target.value })} fullWidth />
-              <TextField label="Model" value={formData.model_name} onChange={(e) => setFormData({ ...formData, model_name: e.target.value })} fullWidth />
-            </Stack>
-            <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }} sx={{ mt: 2 }}>
-              <TextField label="Serial" value={formData.serial_number} onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })} fullWidth />
-              <TextField label="Location" value={formData.location_in_lab} onChange={(e) => setFormData({ ...formData, location_in_lab: e.target.value })} fullWidth />
-            </Stack>
-            <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }} sx={{ mt: 2 }}>
-              <TextField label="Price" type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} fullWidth />
-              <TextField select label="Status" value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value as any })} fullWidth>
-                {STATUS.map((s) => (
-                  <MenuItem key={s} value={s} style={{ textTransform: 'capitalize' }}>{s.replace('_', ' ')}</MenuItem>
-                ))}
-              </TextField>
+            <Stack spacing={2} sx={{ pt: 1 }}>
+              <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
+                <TextField select label="Lab" value={formData.lab} onChange={(e) => setFormData({ ...formData, lab: e.target.value === '' ? '' : Number(e.target.value) })} required fullWidth>
+                  {labs.map((l) => (
+                    <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>
+                  ))}
+                </TextField>
+                <TextField select label="Type" value={formData.equipment_type} onChange={(e) => setFormData({ ...formData, equipment_type: e.target.value as any })} required fullWidth>
+                  {EQUIPMENT_TYPES.map((t) => (
+                    <MenuItem key={t} value={t}>{t}</MenuItem>
+                  ))}
+                </TextField>
+              </Stack>
+              <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
+                <TextField label="Brand" value={formData.brand} onChange={(e) => setFormData({ ...formData, brand: e.target.value })} fullWidth />
+                <TextField label="Model" value={formData.model_name} onChange={(e) => setFormData({ ...formData, model_name: e.target.value })} fullWidth />
+              </Stack>
+              <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
+                <TextField label="Serial" value={formData.serial_number} onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })} fullWidth />
+                <TextField label="Location" value={formData.location_in_lab} onChange={(e) => setFormData({ ...formData, location_in_lab: e.target.value })} fullWidth />
+              </Stack>
+              <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }}>
+                <TextField label="Price" type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} fullWidth />
+                <TextField select label="Status" value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value as any })} fullWidth>
+                  {STATUS.map((s) => (
+                    <MenuItem key={s} value={s} style={{ textTransform: 'capitalize' }}>{s.replace('_', ' ')}</MenuItem>
+                  ))}
+                </TextField>
+              </Stack>
             </Stack>
           </DialogContent>
           <DialogActions>
@@ -372,10 +400,10 @@ const Equipment: React.FC = () => {
 
       {/* Alerts */}
       <Snackbar open={!!error} autoHideDuration={4000} onClose={() => setError('')}>
-        <Alert severity="error" onClose={() => setError('')} sx={{ whiteSpace: 'pre-line' }}>{error}</Alert>
+        <Alert severity="error" onClose={() => setError('')} sx={{ whiteSpace: 'pre-line' }} variant="filled">{error}</Alert>
       </Snackbar>
       <Snackbar open={!!success} autoHideDuration={3000} onClose={() => setSuccess('')}>
-        <Alert severity="success" onClose={() => setSuccess('')}>{success}</Alert>
+        <Alert severity="success" onClose={() => setSuccess('')} variant="filled">{success}</Alert>
       </Snackbar>
     </Box>
   );

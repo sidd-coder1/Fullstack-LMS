@@ -1,11 +1,17 @@
-from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth import logout
+from rest_framework import generics, permissions
+from .serializers import UserSerializer
+from labs.models import User
 
 def home(request):
-    return render(request, 'index.html', {'title': 'Home'})
+    return render(request, 'index.html')
 
-def login_page(request):
-    return render(request, 'login.html')
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = (permissions.AllowAny,)
+    serializer_class = UserSerializer
 
-def register_page(request):
-    return render(request, 'register.html')
+def logout_view(request):
+    logout(request)
+    return redirect('/login')

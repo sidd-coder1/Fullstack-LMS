@@ -138,7 +138,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = 'labs.User'
+
 
 
 # Internationalization

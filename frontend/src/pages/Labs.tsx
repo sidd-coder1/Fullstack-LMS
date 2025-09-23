@@ -4,12 +4,15 @@ import {
   Box,
   Button,
   Card,
+  CardActions,
   CardContent,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  Grid,
   IconButton,
+  InputAdornment,
   Snackbar,
   Alert,
   Stack,
@@ -18,8 +21,7 @@ import {
   Tooltip,
   CircularProgress,
 } from '@mui/material';
-import { DataGrid, type GridColDef } from '@mui/x-data-grid';
-import { Add, Delete, Edit, Refresh } from '@mui/icons-material';
+import { Add, Delete, Edit, Refresh, Search } from '@mui/icons-material';
 import { labsAPI, getToken } from '../services/api';
 import type { Lab } from '../types';
 
@@ -35,6 +37,8 @@ const Labs: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
 
+  const [q, setQ] = useState('');
+
   const [openForm, setOpenForm] = useState<boolean>(false);
   const [formData, setFormData] = useState<LabForm>(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -45,13 +49,12 @@ const Labs: React.FC = () => {
   const loadLabs = async () => {
     try {
       setLoading(true);
-      // Dev fallback: if using temporary dev token, show mock data
       const token = getToken();
       if (token && token.startsWith('dev_')) {
         setLabs([
-          { id: 1, name: 'Lab A', location: 'Block 1', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-          { id: 2, name: 'Lab B', location: 'Block 2', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-          { id: 3, name: 'Networking Lab', location: 'Block 3', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+          { id: 1, name: 'Computer Lab 1', location: 'Building A, Room 101', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+          { id: 2, name: 'Electronics Lab', location: 'Building B, Room 203', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+          { id: 3, name: 'Networking Lab', location: 'Building A, Room 102', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
         ] as unknown as Lab[]);
       } else {
         const data = await labsAPI.getAll();
@@ -67,6 +70,14 @@ const Labs: React.FC = () => {
   useEffect(() => {
     loadLabs();
   }, []);
+
+  const filteredLabs = useMemo(() => {
+    if (!q) return labs;
+    return labs.filter((lab) =>
+      lab.name.toLowerCase().includes(q.toLowerCase()) ||
+      (lab.location || '').toLowerCase().includes(q.toLowerCase())
+    );
+  }, [labs, q]);
 
   const handleOpenCreate = () => {
     setEditingId(null);
@@ -99,10 +110,7 @@ const Labs: React.FC = () => {
         const created = await labsAPI.create({
           name: formData.name.trim(),
           location: formData.location?.trim() || undefined,
-          created_at: new Date().toISOString(), // will be ignored by backend, but keeping type happy
-          updated_at: new Date().toISOString(),
-          id: 0, // will be ignored
-        } as any);
+        });
         setLabs((prev) => [created, ...prev]);
         setSuccess('Lab created successfully');
       }
@@ -134,93 +142,111 @@ const Labs: React.FC = () => {
     }
   };
 
-  const rows = useMemo(() => labs, [labs]);
-
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Labs</Typography>
-        <Stack direction="row" spacing={1}>
-          <Tooltip title="Refresh">
-            <span>
-              <IconButton color="primary" onClick={loadLabs} disabled={loading}>
-                {loading ? <CircularProgress size={22} /> : <Refresh />}
-              </IconButton>
-            </span>
-          </Tooltip>
-          <Button variant="contained" startIcon={<Add />} onClick={handleOpenCreate}>Add Lab</Button>
-        </Stack>
-      </Box>
+      <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold' }}>
+        Labs
+      </Typography>
 
-      <Card>
-        <CardContent>
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
-              <CircularProgress />
-            </Box>
-          ) : rows.length === 0 ? (
-            <Box sx={{ textAlign: 'center', color: 'text.secondary', py: 6 }}>
-              <Typography variant="body1">No labs found. Click "Add Lab" to create one.</Typography>
-            </Box>
-          ) : (
-            <Box sx={{ width: '100%' }}>
-              <DataGrid
-                autoHeight
-                rows={rows}
-                getRowId={(r) => r.id}
-                columns={([
-                  {
-                    field: 'name',
-                    headerName: 'Name',
-                    flex: 1,
-                    renderCell: (params: any) => (
-                      <Box sx={{ cursor: 'pointer', color: 'primary.main', textDecoration: 'underline' }} onClick={() => navigate(`/labs/${params.row.id}`)}>
-                        {params.value}
-                      </Box>
-                    ),
-                  },
-                  { field: 'location', headerName: 'Location', flex: 1, valueGetter: (p: any) => p.row.location || '-' },
-                  { field: 'created_at', headerName: 'Created', flex: 1, valueGetter: (p: any) => new Date(p.row.created_at).toLocaleString() },
-                  { field: 'updated_at', headerName: 'Updated', flex: 1, valueGetter: (p: any) => new Date(p.row.updated_at).toLocaleString() },
-                  {
-                    field: 'actions',
-                    headerName: 'Actions',
-                    sortable: false,
-                    filterable: false,
-                    align: 'right',
-                    headerAlign: 'right',
-                    width: 140,
-                    renderCell: (params: any) => (
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Tooltip title="Edit">
-                          <IconButton color="info" size="small" onClick={() => handleOpenEdit(params.row)}>
-                            <Edit fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Delete">
-                          <IconButton color="error" size="small" onClick={() => confirmDelete(params.row.id)}>
-                            <Delete fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    ),
-                  },
-                ] as GridColDef[])}
-                disableRowSelectionOnClick
-                pageSizeOptions={[5, 10, 25]}
-                initialState={{ pagination: { paginationModel: { pageSize: 10, page: 0 } } }}
-              />
-            </Box>
-          )}
-        </CardContent>
+      <Card sx={{ mb: 3, p: 2 }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="space-between">
+          <TextField
+            label="Search Labs"
+            placeholder="By name or location..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Search fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ flex: 1, maxWidth: { sm: 400 } }}
+          />
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Tooltip title="Refresh">
+              <span>
+                <IconButton color="primary" onClick={loadLabs} disabled={loading}>
+                  {loading ? <CircularProgress size={22} /> : <Refresh />}
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Button variant="contained" startIcon={<Add />} onClick={handleOpenCreate}>
+              Add Lab
+            </Button>
+          </Stack>
+        </Stack>
       </Card>
+
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+          <CircularProgress />
+        </Box>
+      ) : filteredLabs.length === 0 ? (
+        <Card>
+          <CardContent sx={{ textAlign: 'center', color: 'text.secondary', py: 8 }}>
+            <Typography variant="h6">
+              {labs.length > 0 ? 'No labs match your search' : 'No labs found'}
+            </Typography>
+            <Typography>
+              {labs.length > 0 ? 'Try a different search term.' : 'Click "Add Lab" to create one.'}
+            </Typography>
+          </CardContent>
+        </Card>
+      ) : (
+        <Grid container spacing={3}>
+          {filteredLabs.map((lab) => (
+            <Grid item xs={12} sm={6} md={4} key={lab.id}>
+              <Card
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  borderRadius: 3,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                  transition: 'transform 180ms ease, box-shadow 180ms ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
+                  },
+                }}
+              >
+                <CardContent
+                  sx={{ flexGrow: 1, cursor: 'pointer' }}
+                  onClick={() => navigate(`/labs/${lab.id}`)}
+                >
+                  <Typography variant="h6" component="div" sx={{ fontWeight: 600, mb: 0.5 }}>
+                    {lab.name}
+                  </Typography>
+                  <Typography color="text.secondary" variant="body2">
+                    {lab.location || 'No location specified'}
+                  </Typography>
+                </CardContent>
+                <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
+                  <Tooltip title="Edit">
+                    <IconButton color="info" size="small" onClick={() => handleOpenEdit(lab)}>
+                      <Edit fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete">
+                    <IconButton color="error" size="small" onClick={() => confirmDelete(lab.id)}>
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={openForm} onClose={() => setOpenForm(false)} fullWidth maxWidth="sm">
         <DialogTitle>{editingId ? 'Edit Lab' : 'Add Lab'}</DialogTitle>
         <Box component="form" onSubmit={handleSave}>
           <DialogContent>
-            <Stack spacing={2}>
+            <Stack spacing={2} sx={{ pt: 1 }}>
               <TextField
                 label="Name"
                 value={formData.name}
@@ -258,10 +284,10 @@ const Labs: React.FC = () => {
 
       {/* Alerts */}
       <Snackbar open={!!error} autoHideDuration={4000} onClose={() => setError('')}>
-        <Alert severity="error" onClose={() => setError('')}>{error}</Alert>
+        <Alert severity="error" onClose={() => setError('')} variant="filled">{error}</Alert>
       </Snackbar>
       <Snackbar open={!!success} autoHideDuration={3000} onClose={() => setSuccess('')}>
-        <Alert severity="success" onClose={() => setSuccess('')}>{success}</Alert>
+        <Alert severity="success" onClose={() => setSuccess('')} variant="filled">{success}</Alert>
       </Snackbar>
     </Box>
   );

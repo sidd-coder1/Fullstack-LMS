@@ -1,34 +1,19 @@
 from django.urls import path
-from .views import *
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from . import views
 
 urlpatterns = [
-    # Auth
-    path('register/', UserRegisterView.as_view(), name='register'),
-    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-
-    # Lab CRUD
-    path('labs/', LabListCreateView.as_view(), name='lab-list-create'),
-    path('labs/<int:pk>/', LabRetrieveUpdateDeleteView.as_view(), name='lab-rud'),
-
-    # PC CRUD
-    path('labs/<int:lab_id>/pcs/', PCListCreateView.as_view(), name='pc-list-create'),
-    path('pcs/<int:pk>/', PCRetrieveUpdateDeleteView.as_view(), name='pc-rud'),
-
-    # Equipment CRUD
-    path('equipments/', EquipmentListCreateView.as_view(), name='equipment-list-create'),
-    path('equipments/<int:pk>/', EquipmentRetrieveUpdateDeleteView.as_view(), name='equipment-rud'),
-
-    # Software CRUD
-    path('software/', SoftwareListCreateView.as_view(), name='software-list-create'),
-    path('software/<int:pk>/', SoftwareRetrieveUpdateDeleteView.as_view(), name='software-rud'),
-
-    # Maintenance Logs CRUD
-    path('maintenance/', MaintenanceLogListCreateView.as_view(), name='maintenance-list-create'),
-    path('maintenance/<int:pk>/', MaintenanceLogRetrieveUpdateDeleteView.as_view(), name='maintenance-rud'),
-
-    # Inventory CRUD
-    path('inventory/', InventoryListCreateView.as_view(), name='inventory-list-create'),
-    path('inventory/<int:pk>/', InventoryRetrieveUpdateDeleteView.as_view(), name='inventory-rud'),
+    path('users/', views.UserList.as_view(), name='user-list'),
+    path('users/<int:pk>/', views.UserDetail.as_view(), name='user-detail'),
+    path('labs/', views.LabList.as_view(), name='lab-list'),
+    path('labs/<int:pk>/', views.LabDetail.as_view(), name='lab-detail'),
+    path('pcs/', views.PCList.as_view(), name='pc-list'),
+    path('pcs/<int:pk>/', views.PCDetail.as_view(), name='pc-detail'),
+    path('software/', views.SoftwareList.as_view(), name='software-list'),
+    path('software/<int:pk>/', views.SoftwareDetail.as_view(), name='software-detail'),
+    path('equipment/', views.EquipmentList.as_view(), name='equipment-list'),
+    path('equipment/<int:pk>/', views.EquipmentDetail.as_view(), name='equipment-detail'),
+    path('maintenance/', views.MaintenanceLogList.as_view(), name='maintenance-log-list'),
+    path('maintenance/<int:pk>/', views.MaintenanceLogDetail.as_view(), name='maintenance-log-detail'),
+    path('inventory/', views.InventoryList.as_view(), name='inventory-list'),
+    path('inventory/<int:pk>/', views.InventoryDetail.as_view(), name='inventory-detail'),
 ]
