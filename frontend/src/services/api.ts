@@ -143,27 +143,27 @@ export const pcsAPI = {
 // Equipment API
 export const equipmentAPI = {
   getAll: async (): Promise<Equipment[]> => {
-    const response = await api.get('/equipments/');
+    const response = await api.get('/equipment/');
     return response.data;
   },
-  
+
   getById: async (id: number): Promise<Equipment> => {
-    const response = await api.get(`/equipments/${id}/`);
+    const response = await api.get(`/equipment/${id}/`);
     return response.data;
   },
-  
+
   create: async (data: Omit<Equipment, 'id' | 'added_on' | 'updated_at'>): Promise<Equipment> => {
-    const response = await api.post('/equipments/', data);
+    const response = await api.post('/equipment/', data);
     return response.data;
   },
-  
+
   update: async (id: number, data: Partial<Equipment>): Promise<Equipment> => {
-    const response = await api.patch(`/equipments/${id}/`, data);
+    const response = await api.patch(`/equipment/${id}/`, data);
     return response.data;
   },
-  
+
   delete: async (id: number): Promise<void> => {
-    await api.delete(`/equipments/${id}/`);
+    await api.delete(`/equipment/${id}/`);
   },
 };
 

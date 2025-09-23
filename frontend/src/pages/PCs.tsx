@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Typography, Card, CardContent, Stack, TextField, MenuItem, Chip, CircularProgress } from '@mui/material';
 import { Search, Refresh } from '@mui/icons-material';
-import { labsAPI, pcsAPI, getToken } from '../services/api';
+import { labsAPI, pcsAPI } from '../services/api';
 import type { Lab, PC } from '../types';
 
 type Agg = { total: number; working: number; not_working: number; other: number };
@@ -19,35 +19,24 @@ const PCs: React.FC = () => {
   const load = async () => {
     try {
       setLoading(true);
-      const token = getToken();
-      if (token && token.startsWith('dev_')) {
-        const mockLabs: Lab[] = [
-          { id: 1, name: 'Lab A', location: 'Block 1', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-          { id: 2, name: 'Lab B', location: 'Block 2', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-        ];
-        const mockPCs: PC[] = [
-          { id: 1, lab: 1, name: 'PC-01', status: 'working', brand: 'Dell', serial_number: 'PC-01' },
-          { id: 2, lab: 1, name: 'PC-02', status: 'not_working', brand: 'HP', serial_number: 'PC-02' },
-          { id: 3, lab: 1, name: 'PC-03', status: 'working' },
-          { id: 4, lab: 2, name: 'PC-10', status: 'working' },
-          { id: 5, lab: 2, name: 'PC-11', status: 'under_repair' },
-        ];
-        setLabs(mockLabs);
-        setPcs(mockPCs);
-        return;
-      }
+      setError('');
+
       const labsData = await labsAPI.getAll();
       setLabs(labsData);
-      const all: PC[] = [] as any;
+
+      const all: PC[] = [];
       for (const lab of labsData) {
         try {
           const labPcs = await pcsAPI.getByLab(lab.id);
           all.push(...labPcs);
-        } catch {}
+        } catch (err) {
+          console.warn(`Failed to load PCs for lab ${lab.id}:`, err);
+        }
       }
       setPcs(all);
-    } catch (e) {
-      setError('Failed to load PCs');
+    } catch (e: any) {
+      console.error('Failed to load PCs:', e);
+      setError(e?.response?.data?.detail || 'Failed to load PCs. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }

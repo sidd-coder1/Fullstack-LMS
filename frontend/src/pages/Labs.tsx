@@ -22,7 +22,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { Add, Delete, Edit, Refresh, Search } from '@mui/icons-material';
-import { labsAPI, getToken } from '../services/api';
+import { labsAPI } from '../services/api';
 import type { Lab } from '../types';
 
 const emptyForm = { name: '', location: '' };
@@ -49,19 +49,12 @@ const Labs: React.FC = () => {
   const loadLabs = async () => {
     try {
       setLoading(true);
-      const token = getToken();
-      if (token && token.startsWith('dev_')) {
-        setLabs([
-          { id: 1, name: 'Computer Lab 1', location: 'Building A, Room 101', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-          { id: 2, name: 'Electronics Lab', location: 'Building B, Room 203', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-          { id: 3, name: 'Networking Lab', location: 'Building A, Room 102', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-        ] as unknown as Lab[]);
-      } else {
-        const data = await labsAPI.getAll();
-        setLabs(data);
-      }
-    } catch (e) {
-      setError('Failed to load labs');
+      const data = await labsAPI.getAll();
+      setLabs(data);
+      setError('');
+    } catch (e: any) {
+      console.error('Failed to load labs:', e);
+      setError(e.response?.data?.detail || 'Failed to load labs. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -116,8 +109,9 @@ const Labs: React.FC = () => {
       }
       setOpenForm(false);
     } catch (e: any) {
-      const detail = e?.response?.data || 'Save failed';
-      setError(typeof detail === 'string' ? detail : 'Save failed');
+      console.error('Failed to save lab:', e);
+      const detail = e?.response?.data?.detail || e?.response?.data?.name?.[0] || 'Save failed';
+      setError(typeof detail === 'string' ? detail : 'Failed to save lab. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -134,8 +128,9 @@ const Labs: React.FC = () => {
       await labsAPI.delete(deleteId);
       setLabs((prev) => prev.filter((l) => l.id !== deleteId));
       setSuccess('Lab deleted successfully');
-    } catch (e) {
-      setError('Delete failed');
+    } catch (e: any) {
+      console.error('Failed to delete lab:', e);
+      setError(e?.response?.data?.detail || 'Failed to delete lab. Please try again.');
     } finally {
       setOpenDelete(false);
       setDeleteId(null);

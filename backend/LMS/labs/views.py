@@ -1,4 +1,5 @@
 from rest_framework import generics
+from rest_framework.exceptions import ValidationError
 from .models import User, Lab, PC, Software, Equipment, MaintenanceLog, Inventory
 from .serializers import UserSerializer, LabSerializer, PCSerializer, SoftwareSerializer, EquipmentSerializer, MaintenanceLogSerializer, InventorySerializer
 from .permissions import IsAdminOrReadOnly
@@ -34,6 +35,23 @@ class PCDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = PC.objects.all()
     serializer_class = PCSerializer
     permission_classes = [IsAuthenticated]
+
+class LabPCList(generics.ListCreateAPIView):
+    serializer_class = PCSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        lab_id = self.kwargs['lab_id']
+        return PC.objects.filter(lab=lab_id)
+
+    def perform_create(self, serializer):
+        lab_id = self.kwargs['lab_id']
+        # Get the lab instance
+        try:
+            lab = Lab.objects.get(id=lab_id)
+            serializer.save(lab=lab)
+        except Lab.DoesNotExist:
+            raise ValidationError({'lab': 'Lab not found'})
 
 class SoftwareList(generics.ListCreateAPIView):
     queryset = Software.objects.all()

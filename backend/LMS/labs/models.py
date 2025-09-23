@@ -97,10 +97,9 @@ class Equipment(models.Model):
 # ------------------------------
 class Software(models.Model):
     pc = models.ForeignKey(
-        Equipment,
+        PC,
         on_delete=models.CASCADE,
-        related_name="installed_software",
-        limit_choices_to={'equipment_type': 'PC'}
+        related_name="installed_software"
     )
     name = models.CharField(max_length=100)
     version = models.CharField(max_length=50, blank=True, null=True)

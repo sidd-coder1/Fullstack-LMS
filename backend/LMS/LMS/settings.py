@@ -43,6 +43,9 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 
+# Custom User Model
+AUTH_USER_MODEL = 'labs.User'
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',

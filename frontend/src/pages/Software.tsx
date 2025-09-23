@@ -19,7 +19,7 @@ import {
   DialogActions,
 } from '@mui/material';
 import { Add, Refresh, Edit, Delete, Search } from '@mui/icons-material';
-import { softwareAPI, labsAPI, pcsAPI, getToken } from '../services/api';
+import { softwareAPI, labsAPI, pcsAPI } from '../services/api';
 import type { Software as SoftwareType, Lab, PC } from '../types';
 
 type SoftwareForm = {
@@ -64,26 +64,7 @@ const Software: React.FC = () => {
   const loadAll = async () => {
     try {
       setLoading(true);
-      const token = getToken();
-      if (token && token.startsWith('dev_')) {
-        const mockLabs: Lab[] = [
-          { id: 1, name: 'Lab A', location: 'Block 1', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-          { id: 2, name: 'Lab B', location: 'Block 2', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-        ];
-        const mockPcs: PC[] = [
-          { id: 1, lab: 1, name: 'PC-01', status: 'working', brand: 'Dell', serial_number: 'PC-01' },
-          { id: 2, lab: 1, name: 'PC-02', status: 'working', brand: 'HP', serial_number: 'PC-02' },
-          { id: 3, lab: 2, name: 'PC-10', status: 'working', brand: 'Lenovo', serial_number: 'PC-10' },
-        ];
-        const mockSoftware: SoftwareType[] = [
-          { id: 1, pc: 1, name: 'VS Code', version: '1.91', license_key: 'FREE', expiry_date: undefined },
-          { id: 2, pc: 2, name: 'Photoshop', version: '2024', license_key: 'ABC-123', expiry_date: new Date(Date.now()+120*24*60*60*1000).toISOString() },
-        ];
-        setLabs(mockLabs);
-        setPcs(mockPcs);
-        setItems(mockSoftware);
-        return;
-      }
+      setError('');
 
       const [labsData, softwareData] = await Promise.all([
         labsAPI.getAll(),
@@ -92,17 +73,20 @@ const Software: React.FC = () => {
       setLabs(labsData);
 
       // Load PCs for all labs so we can map pc -> lab
-      const pcsAll: PC[] = [] as any;
+      const pcsAll: PC[] = [];
       for (const lab of labsData) {
         try {
           const labPcs = await pcsAPI.getByLab(lab.id);
           pcsAll.push(...labPcs);
-        } catch {}
+        } catch (err) {
+          console.warn(`Failed to load PCs for lab ${lab.id}:`, err);
+        }
       }
       setPcs(pcsAll);
       setItems(softwareData);
-    } catch (e) {
-      setError('Failed to load software');
+    } catch (e: any) {
+      console.error('Failed to load software:', e);
+      setError(e?.response?.data?.detail || 'Failed to load software. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -156,7 +140,7 @@ const Software: React.FC = () => {
         name: formData.name.trim(),
         version: formData.version || undefined,
         license_key: formData.license_key || undefined,
-        expiry_date: formData.expiry_date ? new Date(formData.expiry_date).toISOString() : undefined,
+        expiry_date: formData.expiry_date || undefined,
       };
       if (editingId) {
         const updated = await softwareAPI.update(editingId, payload);
@@ -169,6 +153,7 @@ const Software: React.FC = () => {
       }
       setOpenForm(false);
     } catch (err: any) {
+      console.error('Failed to save software:', err);
       const data = err?.response?.data;
       if (data) {
         const msgs: string[] = [];
@@ -177,7 +162,9 @@ const Software: React.FC = () => {
           else if (typeof v === 'string') msgs.push(`${k}: ${v}`);
         });
         setError(msgs.join('\n') || 'Save failed');
-      } else setError('Save failed');
+      } else {
+        setError('Failed to save software. Please check your data and try again.');
+      }
     } finally {
       setSaving(false);
     }

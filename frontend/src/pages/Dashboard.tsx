@@ -13,13 +13,15 @@ import {
   Hardware as EquipmentIcon,
   Build as MaintenanceIcon,
 } from '@mui/icons-material';
-import { inventoryAPI, labsAPI, maintenanceAPI, getToken } from '../services/api';
-import type { Inventory, Lab, MaintenanceLog } from '../types';
+import { equipmentAPI, labsAPI, maintenanceAPI } from '../services/api';
+import type { Equipment, Lab, MaintenanceLog } from '../types';
 
 interface DashboardStats {
   totalLabs: number;
   totalEquipment: number;
   workingEquipment: number;
+  notWorkingEquipment: number;
+  underRepairEquipment: number;
   pendingMaintenance: number;
 }
 
@@ -28,6 +30,8 @@ const Dashboard: React.FC = () => {
     totalLabs: 0,
     totalEquipment: 0,
     workingEquipment: 0,
+    notWorkingEquipment: 0,
+    underRepairEquipment: 0,
     pendingMaintenance: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -38,45 +42,35 @@ const Dashboard: React.FC = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        
-        // Dev fallback: if using temporary dev token, mock stats
-        const token = getToken();
-        if (token && token.startsWith('dev_')) {
-          setStats({
-            totalLabs: 3,
-            totalEquipment: 42,
-            workingEquipment: 36,
-            pendingMaintenance: 2,
-          });
-          setError('');
-          setLoading(false);
-          return;
-        }
+        setError('');
 
         // Fetch all data in parallel
-        const [labs, inventory, maintenance] = await Promise.all([
+        const [labs, equipment, maintenance] = await Promise.all([
           labsAPI.getAll(),
-          inventoryAPI.getAll(),
+          equipmentAPI.getAll(),
           maintenanceAPI.getAll(),
         ]);
 
-        // Calculate stats
+        // Calculate stats from actual equipment data
         const totalLabs = labs.length;
-        const totalEquipment = inventory.reduce((sum, item) => sum + item.total_quantity, 0);
-        const workingEquipment = inventory.reduce((sum, item) => sum + item.working_quantity, 0);
+        const totalEquipment = equipment.length;
+        const workingEquipment = equipment.filter(item => item.status === 'working').length;
+        const notWorkingEquipment = equipment.filter(item => item.status === 'not_working').length;
+        const underRepairEquipment = equipment.filter(item => item.status === 'under_repair').length;
         const pendingMaintenance = maintenance.filter(log => log.status === 'pending').length;
-        
 
         setStats({
           totalLabs,
           totalEquipment,
           workingEquipment,
+          notWorkingEquipment,
+          underRepairEquipment,
           pendingMaintenance,
         });
-        
+
       } catch (err: any) {
-        setError('Failed to load dashboard data');
         console.error('Dashboard error:', err);
+        setError(err?.response?.data?.detail || 'Failed to load dashboard data. Please check your connection and try again.');
       } finally {
         setLoading(false);
       }
@@ -179,7 +173,8 @@ const Dashboard: React.FC = () => {
           gridTemplateColumns: {
             xs: '1fr',
             sm: 'repeat(2, 1fr)',
-            md: 'repeat(4, 1fr)',
+            md: 'repeat(3, 1fr)',
+            lg: 'repeat(6, 1fr)',
           },
         }}
       >
@@ -209,6 +204,22 @@ const Dashboard: React.FC = () => {
         </Box>
         <Box>
           <StatCard
+            title="Not Working Equipment"
+            value={stats.notWorkingEquipment}
+            icon={<PCIcon />}
+            color="warning"
+          />
+        </Box>
+        <Box>
+          <StatCard
+            title="Under Repair Equipment"
+            value={stats.underRepairEquipment}
+            icon={<MaintenanceIcon />}
+            color="info"
+          />
+        </Box>
+        <Box>
+          <StatCard
             title="Pending Maintenance"
             value={stats.pendingMaintenance}
             icon={<MaintenanceIcon />}
@@ -229,7 +240,7 @@ const Dashboard: React.FC = () => {
             </Typography>
             <Box sx={{ mt: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                • Equipment Status: {stats.workingEquipment} working out of {stats.totalEquipment} total
+                • Equipment Status: {stats.workingEquipment} working, {stats.notWorkingEquipment} not working, {stats.underRepairEquipment} under repair (out of {stats.totalEquipment} total)
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 • Maintenance: {stats.pendingMaintenance} pending issues

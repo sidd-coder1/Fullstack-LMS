@@ -24,7 +24,7 @@ import {
   CardActions,
 } from '@mui/material';
 import { Add, Refresh, Edit, Delete, Search } from '@mui/icons-material';
-import { equipmentAPI, labsAPI, getToken } from '../services/api';
+import { equipmentAPI, labsAPI } from '../services/api';
 import type { Equipment as EquipmentType, Lab } from '../types';
 
 const EQUIPMENT_TYPES = [
@@ -80,19 +80,7 @@ const Equipment: React.FC = () => {
   const loadAll = async () => {
     try {
       setLoading(true);
-      const token = getToken();
-      if (token && token.startsWith('dev_')) {
-        setLabs([
-          { id: 1, name: 'Lab A', location: 'Block 1', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-          { id: 2, name: 'Lab B', location: 'Block 2', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-        ] as unknown as Lab[]);
-        setItems([
-          { id: 1, lab: 1, equipment_type: 'PC', brand: 'Dell', model_name: 'Optiplex', serial_number: 'PC-001', location_in_lab: 'Row 1', price: 45000 as any, status: 'working', added_on: new Date().toISOString(), updated_at: new Date().toISOString() },
-          { id: 2, lab: 1, equipment_type: 'MONITOR', brand: 'LG', model_name: 'Ultra', serial_number: 'MN-002', location_in_lab: 'Row 1', price: 12000 as any, status: 'working', added_on: new Date().toISOString(), updated_at: new Date().toISOString() },
-          { id: 3, lab: 2, equipment_type: 'ROUTER', brand: 'TP-Link', model_name: 'AX1800', serial_number: 'RT-003', location_in_lab: 'Rack', price: 8000 as any, status: 'under_repair', added_on: new Date().toISOString(), updated_at: new Date().toISOString() },
-        ] as unknown as EquipmentType[]);
-        return;
-      }
+      setError('');
 
       const [eqps, labsData] = await Promise.all([
         equipmentAPI.getAll(),
@@ -100,8 +88,9 @@ const Equipment: React.FC = () => {
       ]);
       setItems(eqps);
       setLabs(labsData);
-    } catch (e) {
-      setError('Failed to load equipment');
+    } catch (e: any) {
+      console.error('Failed to load equipment:', e);
+      setError(e?.response?.data?.detail || 'Failed to load equipment. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }

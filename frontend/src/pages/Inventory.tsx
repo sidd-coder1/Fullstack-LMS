@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Typography, Card, CardContent, Stack, Chip, CircularProgress } from '@mui/material';
-import { inventoryAPI, getToken } from '../services/api';
+import { Box, Typography, Card, CardContent, Stack, Chip, CircularProgress, Alert } from '@mui/material';
+import { inventoryAPI } from '../services/api';
 import type { Inventory as InventoryRow } from '../types';
 
 type Agg = {
@@ -18,21 +18,13 @@ const Inventory: React.FC = () => {
   const load = async () => {
     try {
       setLoading(true);
-      const token = getToken();
-      if (token && token.startsWith('dev_')) {
-        // Mock data: per lab by equipment type
-        setRows([
-          { id: 1, lab: 1, equipment_type: 'PC', total_quantity: 30, working_quantity: 26, not_working_quantity: 2, under_repair_quantity: 2 },
-          { id: 2, lab: 1, equipment_type: 'MONITOR', total_quantity: 30, working_quantity: 28, not_working_quantity: 1, under_repair_quantity: 1 },
-          { id: 3, lab: 2, equipment_type: 'PC', total_quantity: 12, working_quantity: 10, not_working_quantity: 1, under_repair_quantity: 1 },
-          { id: 4, lab: 2, equipment_type: 'ROUTER', total_quantity: 2, working_quantity: 1, not_working_quantity: 0, under_repair_quantity: 1 },
-        ] as unknown as InventoryRow[]);
-        return;
-      }
+      setError('');
+
       const data = await inventoryAPI.getAll();
       setRows(data);
-    } catch (e) {
-      setError('Failed to load inventory');
+    } catch (e: any) {
+      console.error('Failed to load inventory:', e);
+      setError(e?.response?.data?.detail || 'Failed to load inventory. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -88,6 +80,10 @@ const Inventory: React.FC = () => {
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
           <CircularProgress />
         </Box>
+      ) : error ? (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
       ) : (
         <>
           {/* KPI Cards */}

@@ -14,7 +14,8 @@ class LabSerializer(serializers.ModelSerializer):
 class PCSerializer(serializers.ModelSerializer):
     class Meta:
         model = PC
-        fields = '__all__'
+        fields = ('id', 'lab', 'name', 'status', 'brand', 'serial_number')
+        read_only_fields = ('id', 'lab')
 
 class SoftwareSerializer(serializers.ModelSerializer):
     class Meta:

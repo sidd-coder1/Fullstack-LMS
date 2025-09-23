@@ -51,14 +51,16 @@ const LabDetail: React.FC = () => {
   const loadAll = async () => {
     try {
       setLoading(true);
+      setError('');
       const [labData, pcData] = await Promise.all([
         labsAPI.getById(labId),
         pcsAPI.getByLab(labId),
       ]);
       setLab(labData);
       setPcs(pcData);
-    } catch (e) {
-      setError('Failed to load lab or PCs');
+    } catch (e: any) {
+      console.error('Failed to load lab or PCs:', e);
+      setError(e?.response?.data?.detail || 'Failed to load lab details. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
