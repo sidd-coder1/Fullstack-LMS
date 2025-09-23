@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-zhg$p@*ef$u#v0l(umt(2zhf%-501((p(@qz9s0#mj_9icsc5j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 
 # Application definition
@@ -43,9 +43,14 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 
+# -----------------------------
 # Custom User Model
+# -----------------------------
 AUTH_USER_MODEL = 'labs.User'
 
+# -----------------------------
+# Django REST Framework Configuration
+# -----------------------------
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -53,13 +58,19 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 50,
 }
 
+# -----------------------------
+# JWT Authentication Settings
+# -----------------------------
 from datetime import timedelta
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'ROTATE_REFRESH_TOKENS': True,
 }
 
 
@@ -76,10 +87,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'LMS.urls'
 
+# Templates not needed for API-only backend
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

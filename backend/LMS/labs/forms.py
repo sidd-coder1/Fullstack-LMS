@@ -1,16 +1,28 @@
 from django import forms
-from .models import Lab, PC
+from .models import Lab, PC, Equipment, MaintenanceLog
 
 class LabForm(forms.ModelForm):
     class Meta:
         model = Lab
-        fields = ['lab_code', 'name', 'location', 'description', 'lab_head']
+        fields = ['name', 'location']
 
 class PCForm(forms.ModelForm):
     class Meta:
         model = PC
+        fields = ['name', 'status', 'brand', 'serial_number']
+
+class EquipmentForm(forms.ModelForm):
+    class Meta:
+        model = Equipment
         fields = [
-            "asset_tag", "hostname", "serial_number", "ip_address", "mac_address",
-            "manufacturer", "model", "cpu", "cpu_cores", "ram_mb", "storage_gb",
-            "os_name", "os_version", "purchased_on", "warranty_until", "is_defective", "defective_reason"
+            'lab', 'equipment_type', 'brand', 'model_name',
+            'serial_number', 'location_in_lab', 'price', 'status'
+        ]
+
+class MaintenanceLogForm(forms.ModelForm):
+    class Meta:
+        model = MaintenanceLog
+        fields = [
+            'equipment', 'issue_description', 'status_before',
+            'status_after', 'status', 'remarks'
         ]
