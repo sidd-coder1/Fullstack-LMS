@@ -57,7 +57,9 @@ const LabDetail: React.FC = () => {
         pcsAPI.getByLab(labId),
       ]);
       setLab(labData);
-      setPcs(pcData);
+      // Extract results from paginated response if needed
+      const pcsArray = Array.isArray(pcData?.results) ? pcData.results : Array.isArray(pcData) ? pcData : [];
+      setPcs(pcsArray);
     } catch (e: any) {
       console.error('Failed to load lab or PCs:', e);
       setError(e?.response?.data?.detail || 'Failed to load lab details. Please check your connection and try again.');

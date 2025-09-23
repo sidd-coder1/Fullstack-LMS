@@ -22,10 +22,12 @@ const PCs: React.FC = () => {
       setError('');
 
       const labsData = await labsAPI.getAll();
-      setLabs(labsData);
+      // Extract results from paginated response
+      const labsArray = Array.isArray(labsData?.results) ? labsData.results : Array.isArray(labsData) ? labsData : [];
+      setLabs(labsArray);
 
       const all: PC[] = [];
-      for (const lab of labsData) {
+      for (const lab of labsArray) {
         try {
           const labPcs = await pcsAPI.getByLab(lab.id);
           all.push(...labPcs);

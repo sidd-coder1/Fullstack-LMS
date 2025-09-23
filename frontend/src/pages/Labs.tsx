@@ -50,7 +50,9 @@ const Labs: React.FC = () => {
     try {
       setLoading(true);
       const data = await labsAPI.getAll();
-      setLabs(data);
+      // Extract results from paginated response
+      const labsArray = Array.isArray(data?.results) ? data.results : Array.isArray(data) ? data : [];
+      setLabs(labsArray);
       setError('');
     } catch (e: any) {
       console.error('Failed to load labs:', e);

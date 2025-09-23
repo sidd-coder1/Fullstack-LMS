@@ -51,13 +51,18 @@ const Dashboard: React.FC = () => {
           maintenanceAPI.getAll(),
         ]);
 
+        // Extract results from paginated responses
+        const labsArray = Array.isArray(labs?.results) ? labs.results : Array.isArray(labs) ? labs : [];
+        const equipmentArray = Array.isArray(equipment?.results) ? equipment.results : Array.isArray(equipment) ? equipment : [];
+        const maintenanceArray = Array.isArray(maintenance?.results) ? maintenance.results : Array.isArray(maintenance) ? maintenance : [];
+
         // Calculate stats from actual equipment data
-        const totalLabs = labs.length;
-        const totalEquipment = equipment.length;
-        const workingEquipment = equipment.filter(item => item.status === 'working').length;
-        const notWorkingEquipment = equipment.filter(item => item.status === 'not_working').length;
-        const underRepairEquipment = equipment.filter(item => item.status === 'under_repair').length;
-        const pendingMaintenance = maintenance.filter(log => log.status === 'pending').length;
+        const totalLabs = labsArray.length;
+        const totalEquipment = equipmentArray.length;
+        const workingEquipment = equipmentArray.filter(item => item.status === 'working').length;
+        const notWorkingEquipment = equipmentArray.filter(item => item.status === 'not_working').length;
+        const underRepairEquipment = equipmentArray.filter(item => item.status === 'under_repair').length;
+        const pendingMaintenance = maintenanceArray.filter(log => log.status === 'pending').length;
 
         setStats({
           totalLabs,

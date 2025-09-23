@@ -86,8 +86,11 @@ const Equipment: React.FC = () => {
         equipmentAPI.getAll(),
         labsAPI.getAll(),
       ]);
-      setItems(eqps);
-      setLabs(labsData);
+      // Extract results from paginated responses
+      const equipmentArray = Array.isArray(eqps?.results) ? eqps.results : Array.isArray(eqps) ? eqps : [];
+      const labsArray = Array.isArray(labsData?.results) ? labsData.results : Array.isArray(labsData) ? labsData : [];
+      setItems(equipmentArray);
+      setLabs(labsArray);
     } catch (e: any) {
       console.error('Failed to load equipment:', e);
       setError(e?.response?.data?.detail || 'Failed to load equipment. Please check your connection and try again.');

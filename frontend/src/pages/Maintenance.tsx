@@ -98,9 +98,14 @@ const Maintenance: React.FC = () => {
         equipmentAPI.getAll(),
       ]);
 
+      // Extract results from paginated responses
+      const logsArray = Array.isArray(logs?.results) ? logs.results : Array.isArray(logs) ? logs : [];
+      const labsArray = Array.isArray(labsData?.results) ? labsData.results : Array.isArray(labsData) ? labsData : [];
+      const equipmentArray = Array.isArray(equipmentData?.results) ? equipmentData.results : Array.isArray(equipmentData) ? equipmentData : [];
+
       // Map backend MaintenanceLog to UI MaintRow
-      const mapped: MaintRow[] = logs.map((m: MaintenanceLog) => {
-        const equip = equipmentData.find(e => e.id === m.equipment);
+      const mapped: MaintRow[] = logsArray.map((m: MaintenanceLog) => {
+        const equip = equipmentArray.find(e => e.id === m.equipment);
         return {
           id: m.id,
           equipment: m.equipment,
@@ -117,8 +122,8 @@ const Maintenance: React.FC = () => {
       });
 
       setItems(mapped);
-      setLabs(labsData);
-      setEquipment(equipmentData);
+      setLabs(labsArray);
+      setEquipment(equipmentArray);
     } catch (e: any) {
       console.error('Failed to load maintenance logs:', e);
       setError(e?.response?.data?.detail || 'Failed to load maintenance logs. Please check your connection and try again.');

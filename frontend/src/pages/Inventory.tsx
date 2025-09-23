@@ -21,7 +21,9 @@ const Inventory: React.FC = () => {
       setError('');
 
       const data = await inventoryAPI.getAll();
-      setRows(data);
+      // Extract results from paginated response
+      const inventoryArray = Array.isArray(data?.results) ? data.results : Array.isArray(data) ? data : [];
+      setRows(inventoryArray);
     } catch (e: any) {
       console.error('Failed to load inventory:', e);
       setError(e?.response?.data?.detail || 'Failed to load inventory. Please check your connection and try again.');

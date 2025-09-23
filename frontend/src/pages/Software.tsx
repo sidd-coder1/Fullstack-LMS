@@ -70,11 +70,14 @@ const Software: React.FC = () => {
         labsAPI.getAll(),
         softwareAPI.getAll(),
       ]);
-      setLabs(labsData);
+      // Extract results from paginated responses
+      const labsArray = Array.isArray(labsData?.results) ? labsData.results : Array.isArray(labsData) ? labsData : [];
+      const softwareArray = Array.isArray(softwareData?.results) ? softwareData.results : Array.isArray(softwareData) ? softwareData : [];
+      setLabs(labsArray);
 
       // Load PCs for all labs so we can map pc -> lab
       const pcsAll: PC[] = [];
-      for (const lab of labsData) {
+      for (const lab of labsArray) {
         try {
           const labPcs = await pcsAPI.getByLab(lab.id);
           pcsAll.push(...labPcs);
@@ -83,7 +86,7 @@ const Software: React.FC = () => {
         }
       }
       setPcs(pcsAll);
-      setItems(softwareData);
+      setItems(softwareArray);
     } catch (e: any) {
       console.error('Failed to load software:', e);
       setError(e?.response?.data?.detail || 'Failed to load software. Please check your connection and try again.');
