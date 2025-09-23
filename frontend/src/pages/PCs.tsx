@@ -4,7 +4,21 @@ import { Search, Refresh } from '@mui/icons-material';
 import { labsAPI, pcsAPI } from '../services/api';
 import type { Lab, PC } from '../types';
 
-type Agg = { total: number; working: number; not_working: number; other: number };
+type Agg = { total: number; working: number; not_working: number; under_repair: number; other: number };
+
+const getStatusChip = (status: string) => {
+  const normalizedStatus = status?.toLowerCase() || '';
+
+  if (normalizedStatus === 'working') {
+    return <Chip label="Working" color="success" size="small" />;
+  } else if (normalizedStatus === 'not_working') {
+    return <Chip label="Not Working" color="error" size="small" />;
+  } else if (normalizedStatus === 'under_repair') {
+    return <Chip label="Under Repair" color="warning" size="small" />;
+  } else {
+    return <Chip label={status || 'Unknown'} color="default" size="small" />;
+  }
+};
 
 const PCs: React.FC = () => {
   const [labs, setLabs] = useState<Lab[]>([]);
@@ -64,19 +78,21 @@ const PCs: React.FC = () => {
       const s = (p.status || '').toLowerCase();
       if (s === 'working') acc.working += 1;
       else if (s === 'not_working') acc.not_working += 1;
-      else acc.other += 1; // e.g., under_repair or unknown
+      else if (s === 'under_repair') acc.under_repair += 1;
+      else acc.other += 1; // unknown status
       return acc;
-    }, { total: 0, working: 0, not_working: 0, other: 0 });
+    }, { total: 0, working: 0, not_working: 0, under_repair: 0, other: 0 });
   }, [filtered]);
 
   const byLab: Record<number, Agg> = useMemo(() => {
     const map: Record<number, Agg> = {} as any;
     filtered.forEach((p) => {
-      const entry = (map[p.lab] ??= { total: 0, working: 0, not_working: 0, other: 0 });
+      const entry = (map[p.lab] ??= { total: 0, working: 0, not_working: 0, under_repair: 0, other: 0 });
       entry.total += 1;
       const s = (p.status || '').toLowerCase();
       if (s === 'working') entry.working += 1;
       else if (s === 'not_working') entry.not_working += 1;
+      else if (s === 'under_repair') entry.under_repair += 1;
       else entry.other += 1;
     });
     return map;
@@ -113,13 +129,14 @@ const PCs: React.FC = () => {
               <MenuItem value="">All</MenuItem>
               <MenuItem value="working">Working</MenuItem>
               <MenuItem value="not_working">Not Working</MenuItem>
-              <MenuItem value="under_repair">Under Repair/Other</MenuItem>
+              <MenuItem value="under_repair">Under Repair</MenuItem>
             </TextField>
             <Box>
               <Chip label={`Total: ${totals.total}`} sx={{ mr: 1 }} />
               <Chip color="success" label={`Working: ${totals.working}`} sx={{ mr: 1 }} />
               <Chip color="error" label={`Not Working: ${totals.not_working}`} sx={{ mr: 1 }} />
-              <Chip color="warning" label={`Other: ${totals.other}`} />
+              <Chip color="warning" label={`Under Repair: ${totals.under_repair}`} sx={{ mr: 1 }} />
+              {totals.other > 0 && <Chip color="default" label={`Other: ${totals.other}`} />}
             </Box>
           </Stack>
         </CardContent>
@@ -139,7 +156,7 @@ const PCs: React.FC = () => {
                 <Typography color="text.secondary">No data</Typography>
               ) : (
                 <Box sx={{ overflowX: 'auto' }}>
-                  <Box component="svg" width={Math.max(600, labIds.length * 160)} height={280}>
+                  <Box component="svg" width={Math.max(600, labIds.length * 160)} height={280} sx={{ '& text': { fill: 'currentColor' } }}>
                     {labIds.map((id, idx) => {
                       const agg = byLab[id]!;
                       const x = 70 + idx * 140;
@@ -148,7 +165,7 @@ const PCs: React.FC = () => {
                         <g key={id}>
                           <rect x={x} y={60 + (160 - scale(agg.working))} width={28} height={scale(agg.working)} fill="#16a34a" rx={4} />
                           <rect x={x + 34} y={60 + (160 - scale(agg.not_working))} width={28} height={scale(agg.not_working)} fill="#dc2626" rx={4} />
-                          <rect x={x + 68} y={60 + (160 - scale(agg.other))} width={28} height={scale(agg.other)} fill="#f59e0b" rx={4} />
+                          <rect x={x + 68} y={60 + (160 - scale(agg.under_repair))} width={28} height={scale(agg.under_repair)} fill="#f59e0b" rx={4} />
                           <text x={x + 48} y={240} textAnchor="middle" fontSize="12">Lab {id}</text>
                         </g>
                       );
@@ -159,7 +176,7 @@ const PCs: React.FC = () => {
                       <rect x={110} y={10} width={12} height={12} fill="#dc2626" />
                       <text x={128} y={20} fontSize="12">Not Working</text>
                       <rect x={230} y={10} width={12} height={12} fill="#f59e0b" />
-                      <text x={248} y={20} fontSize="12">Under Repair/Other</text>
+                      <text x={248} y={20} fontSize="12">Under Repair</text>
                     </g>
                   </Box>
                 </Box>
@@ -171,23 +188,23 @@ const PCs: React.FC = () => {
           <Card>
             <CardContent>
               <Box component="table" sx={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
-                <Box component="thead" sx={{ backgroundColor: 'grey.100' }}>
+                <Box component="thead" sx={{ backgroundColor: (theme) => theme.palette.mode === 'light' ? 'grey.100' : 'grey.200' }}>
                   <Box component="tr">
-                    <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Lab</Box>
-                    <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Name</Box>
-                    <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Brand</Box>
-                    <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Serial</Box>
-                    <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Status</Box>
+                    <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Lab</Box>
+                    <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Name</Box>
+                    <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Brand</Box>
+                    <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Serial</Box>
+                    <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Status</Box>
                   </Box>
                 </Box>
                 <Box component="tbody">
                   {filtered.map((p) => (
-                    <Box key={p.id} component="tr" sx={{ '&:nth-of-type(even)': { backgroundColor: 'grey.50' } }}>
-                      <Box component="td" sx={{ p: 1.5 }}>Lab {p.lab}</Box>
-                      <Box component="td" sx={{ p: 1.5 }}>{p.name}</Box>
-                      <Box component="td" sx={{ p: 1.5 }}>{p.brand || '-'}</Box>
-                      <Box component="td" sx={{ p: 1.5 }}>{p.serial_number || '-'}</Box>
-                      <Box component="td" sx={{ p: 1.5, textTransform: 'capitalize' }}>{(p.status || '').replace('_', ' ') || '-'}</Box>
+                    <Box key={p.id} component="tr" sx={{ '&:nth-of-type(even)': { backgroundColor: (theme) => theme.palette.mode === 'light' ? 'grey.50' : 'grey.100' } }}>
+                      <Box component="td" sx={{ p: 1.5, color: 'text.secondary' }}>Lab {p.lab}</Box>
+                      <Box component="td" sx={{ p: 1.5, color: 'text.primary' }}>{p.name}</Box>
+                      <Box component="td" sx={{ p: 1.5, color: 'text.secondary' }}>{p.brand || '-'}</Box>
+                      <Box component="td" sx={{ p: 1.5, color: 'text.secondary' }}>{p.serial_number || '-'}</Box>
+                      <Box component="td" sx={{ p: 1.5 }}>{getStatusChip(p.status)}</Box>
                     </Box>
                   ))}
                 </Box>

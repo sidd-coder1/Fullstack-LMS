@@ -249,26 +249,26 @@ const Software: React.FC = () => {
             </Box>
           ) : (
             <Box component="table" sx={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
-              <Box component="thead" sx={{ backgroundColor: 'grey.100' }}>
+              <Box component="thead" sx={{ backgroundColor: (theme) => theme.palette.mode === 'light' ? 'grey.100' : 'grey.200' }}>
                 <Box component="tr">
-                  <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Lab</Box>
-                  <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>PC</Box>
-                  <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Name</Box>
-                  <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Version</Box>
-                  <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>License</Box>
-                  <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Expiry</Box>
-                  <Box component="th" sx={{ textAlign: 'right', p: 1.5 }}>Actions</Box>
+                  <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Lab</Box>
+                  <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>PC</Box>
+                  <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Name</Box>
+                  <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Version</Box>
+                  <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>License</Box>
+                  <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Expiry</Box>
+                  <Box component="th" sx={{ textAlign: 'right', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Actions</Box>
                 </Box>
               </Box>
               <Box component="tbody">
                 {filtered.map((row) => (
-                  <Box key={row.id} component="tr" sx={{ '&:nth-of-type(even)': { backgroundColor: 'grey.50' } }}>
-                    <Box component="td" sx={{ p: 1.5 }}>{labs.find((l) => l.id === pcToLab(row.pc))?.name || pcToLab(row.pc) || '-'}</Box>
-                    <Box component="td" sx={{ p: 1.5 }}>{pcs.find((p) => p.id === row.pc)?.name || row.pc}</Box>
-                    <Box component="td" sx={{ p: 1.5 }}>{row.name}</Box>
-                    <Box component="td" sx={{ p: 1.5 }}>{row.version || '-'}</Box>
-                    <Box component="td" sx={{ p: 1.5 }}>{row.license_key || '-'}</Box>
-                    <Box component="td" sx={{ p: 1.5 }}>{row.expiry_date ? row.expiry_date.slice(0,10) : '-'}</Box>
+                  <Box key={row.id} component="tr" sx={{ '&:nth-of-type(even)': { backgroundColor: (theme) => theme.palette.mode === 'light' ? 'grey.50' : 'grey.100' } }}>
+                    <Box component="td" sx={{ p: 1.5, color: 'text.primary' }}>{labs.find((l) => l.id === pcToLab(row.pc))?.name || pcToLab(row.pc) || '-'}</Box>
+                    <Box component="td" sx={{ p: 1.5, color: 'text.primary' }}>{pcs.find((p) => p.id === row.pc)?.name || row.pc}</Box>
+                    <Box component="td" sx={{ p: 1.5, color: 'text.primary' }}>{row.name}</Box>
+                    <Box component="td" sx={{ p: 1.5, color: 'text.secondary' }}>{row.version || '-'}</Box>
+                    <Box component="td" sx={{ p: 1.5, color: 'text.secondary' }}>{row.license_key || '-'}</Box>
+                    <Box component="td" sx={{ p: 1.5, color: 'text.secondary' }}>{row.expiry_date ? row.expiry_date.slice(0,10) : '-'}</Box>
                     <Box component="td" sx={{ p: 1.5, textAlign: 'right' }}>
                       <Tooltip title="Edit">
                         <IconButton color="info" onClick={() => openEdit(row)}>

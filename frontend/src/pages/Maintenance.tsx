@@ -333,26 +333,26 @@ const Maintenance: React.FC = () => {
             </Box>
           ) : (
             <Box component="table" sx={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
-              <Box component="thead" sx={{ backgroundColor: 'grey.100' }}>
+              <Box component="thead" sx={{ backgroundColor: (theme) => theme.palette.mode === 'light' ? 'grey.100' : 'grey.200' }}>
                 <Box component="tr">
-                  <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Equipment</Box>
-                  <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Issue</Box>
-                  <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Status</Box>
-                  <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Status Before</Box>
-                  <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Reported</Box>
-                  <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Fixed</Box>
-                  <Box component="th" sx={{ textAlign: 'right', p: 1.5 }}>Actions</Box>
+                  <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Equipment</Box>
+                  <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Issue</Box>
+                  <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Status</Box>
+                  <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Status Before</Box>
+                  <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Reported</Box>
+                  <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Fixed</Box>
+                  <Box component="th" sx={{ textAlign: 'right', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Actions</Box>
                 </Box>
               </Box>
               <Box component="tbody">
                 {filtered.map((row) => (
-                  <Box key={row.id} component="tr" sx={{ '&:nth-of-type(even)': { backgroundColor: 'grey.50' } }}>
-                    <Box component="td" sx={{ p: 1.5 }}>{row.equipment_name || `Equipment #${row.equipment}`}</Box>
-                    <Box component="td" sx={{ p: 1.5 }}>{row.title}</Box>
-                    <Box component="td" sx={{ p: 1.5, textTransform: 'capitalize' }}>{row.status}</Box>
-                    <Box component="td" sx={{ p: 1.5, textTransform: 'capitalize' }}>{row.status_before.replace('_', ' ')}</Box>
-                    <Box component="td" sx={{ p: 1.5 }}>{row.reported_on?.slice(0,10)}</Box>
-                    <Box component="td" sx={{ p: 1.5 }}>{row.fixed_on ? row.fixed_on.slice(0,10) : '-'}</Box>
+                  <Box key={row.id} component="tr" sx={{ '&:nth-of-type(even)': { backgroundColor: (theme) => theme.palette.mode === 'light' ? 'grey.50' : 'grey.100' } }}>
+                    <Box component="td" sx={{ p: 1.5, color: 'text.primary' }}>{row.equipment_name || `Equipment #${row.equipment}`}</Box>
+                    <Box component="td" sx={{ p: 1.5, color: 'text.primary' }}>{row.title}</Box>
+                    <Box component="td" sx={{ p: 1.5, textTransform: 'capitalize', color: 'text.primary' }}>{row.status}</Box>
+                    <Box component="td" sx={{ p: 1.5, textTransform: 'capitalize', color: 'text.secondary' }}>{row.status_before.replace('_', ' ')}</Box>
+                    <Box component="td" sx={{ p: 1.5, color: 'text.secondary' }}>{row.reported_on?.slice(0,10)}</Box>
+                    <Box component="td" sx={{ p: 1.5, color: 'text.secondary' }}>{row.fixed_on ? row.fixed_on.slice(0,10) : '-'}</Box>
                     <Box component="td" sx={{ p: 1.5, textAlign: 'right' }}>
                       <Tooltip title="Edit">
                         <IconButton color="info" onClick={() => openEdit(row)}>

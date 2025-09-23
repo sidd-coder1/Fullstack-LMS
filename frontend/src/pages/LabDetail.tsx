@@ -191,22 +191,22 @@ const LabDetail: React.FC = () => {
                 </Box>
               ) : (
                 <Box component="table" sx={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
-                  <Box component="thead" sx={{ backgroundColor: 'grey.100' }}>
+                  <Box component="thead" sx={{ backgroundColor: (theme) => theme.palette.mode === 'light' ? 'grey.100' : 'grey.200' }}>
                     <Box component="tr">
-                      <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Name</Box>
-                      <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Status</Box>
-                      <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Brand</Box>
-                      <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Serial No.</Box>
-                      <Box component="th" sx={{ textAlign: 'right', p: 1.5 }}>Actions</Box>
+                      <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Name</Box>
+                      <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Status</Box>
+                      <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Brand</Box>
+                      <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Serial No.</Box>
+                      <Box component="th" sx={{ textAlign: 'right', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Actions</Box>
                     </Box>
                   </Box>
                   <Box component="tbody">
                     {rows.map((pc) => (
-                      <Box component="tr" key={pc.id} sx={{ '&:nth-of-type(even)': { backgroundColor: 'grey.50' } }}>
-                        <Box component="td" sx={{ p: 1.5 }}>{pc.name}</Box>
-                        <Box component="td" sx={{ p: 1.5, textTransform: 'capitalize' }}>{pc.status}</Box>
-                        <Box component="td" sx={{ p: 1.5 }}>{pc.brand || '-'}</Box>
-                        <Box component="td" sx={{ p: 1.5 }}>{pc.serial_number || '-'}</Box>
+                      <Box component="tr" key={pc.id} sx={{ '&:nth-of-type(even)': { backgroundColor: (theme) => theme.palette.mode === 'light' ? 'grey.50' : 'grey.100' } }}>
+                        <Box component="td" sx={{ p: 1.5, color: 'text.primary' }}>{pc.name}</Box>
+                        <Box component="td" sx={{ p: 1.5, textTransform: 'capitalize', color: 'text.primary' }}>{pc.status}</Box>
+                        <Box component="td" sx={{ p: 1.5, color: 'text.secondary' }}>{pc.brand || '-'}</Box>
+                        <Box component="td" sx={{ p: 1.5, color: 'text.secondary' }}>{pc.serial_number || '-'}</Box>
                         <Box component="td" sx={{ p: 1.5, textAlign: 'right' }}>
                           <Tooltip title="Edit">
                             <IconButton color="info" onClick={() => handleOpenEdit(pc)}>

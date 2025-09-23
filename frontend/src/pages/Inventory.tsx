@@ -167,23 +167,23 @@ const Inventory: React.FC = () => {
                 <Typography color="text.secondary">No data</Typography>
               ) : (
                 <Box component="table" sx={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
-                  <Box component="thead" sx={{ backgroundColor: 'grey.100' }}>
+                  <Box component="thead" sx={{ backgroundColor: (theme) => theme.palette.mode === 'light' ? 'grey.100' : 'grey.200' }}>
                     <Box component="tr">
-                      <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Lab</Box>
-                      <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Total</Box>
-                      <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Working</Box>
-                      <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Not Working</Box>
-                      <Box component="th" sx={{ textAlign: 'left', p: 1.5 }}>Under Repair</Box>
+                      <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Lab</Box>
+                      <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Total</Box>
+                      <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Working</Box>
+                      <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Not Working</Box>
+                      <Box component="th" sx={{ textAlign: 'left', p: 1.5, color: 'text.primary', fontWeight: 600 }}>Under Repair</Box>
                     </Box>
                   </Box>
                   <Box component="tbody">
                     {Object.entries(byLab).map(([lab, agg]) => (
-                      <Box key={lab} component="tr" sx={{ '&:nth-of-type(even)': { backgroundColor: 'grey.50' } }}>
-                        <Box component="td" sx={{ p: 1.5 }}>Lab {lab}</Box>
-                        <Box component="td" sx={{ p: 1.5 }}>{agg.total}</Box>
-                        <Box component="td" sx={{ p: 1.5 }}>{agg.working}</Box>
-                        <Box component="td" sx={{ p: 1.5 }}>{agg.not_working}</Box>
-                        <Box component="td" sx={{ p: 1.5 }}>{agg.under_repair}</Box>
+                      <Box key={lab} component="tr" sx={{ '&:nth-of-type(even)': { backgroundColor: (theme) => theme.palette.mode === 'light' ? 'grey.50' : 'grey.100' } }}>
+                        <Box component="td" sx={{ p: 1.5, color: 'text.primary' }}>Lab {lab}</Box>
+                        <Box component="td" sx={{ p: 1.5, color: 'text.primary' }}>{agg.total}</Box>
+                        <Box component="td" sx={{ p: 1.5, color: 'success.main' }}>{agg.working}</Box>
+                        <Box component="td" sx={{ p: 1.5, color: 'error.main' }}>{agg.not_working}</Box>
+                        <Box component="td" sx={{ p: 1.5, color: 'warning.main' }}>{agg.under_repair}</Box>
                       </Box>
                     ))}
                   </Box>
