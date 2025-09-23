@@ -30,7 +30,9 @@ const PCs: React.FC = () => {
       for (const lab of labsArray) {
         try {
           const labPcs = await pcsAPI.getByLab(lab.id);
-          all.push(...labPcs);
+          // Extract results from paginated response if needed
+          const pcsArray = Array.isArray(labPcs?.results) ? labPcs.results : Array.isArray(labPcs) ? labPcs : [];
+          all.push(...pcsArray);
         } catch (err) {
           console.warn(`Failed to load PCs for lab ${lab.id}:`, err);
         }
