@@ -41,12 +41,15 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'users',
+    'tickets',
 ]
 
 # -----------------------------
 # Custom User Model
 # -----------------------------
 AUTH_USER_MODEL = 'labs.User'
+AUTH_USER_MODEL = 'users.User'
 
 # -----------------------------
 # Django REST Framework Configuration
@@ -152,8 +155,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
-
 
 
 # Internationalization

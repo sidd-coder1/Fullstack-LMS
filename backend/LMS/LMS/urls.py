@@ -10,6 +10,11 @@ from rest_framework_simplejwt.views import (
 from .views import RegisterView
 
 urlpatterns = [
+    # App-specific endpoints
+    path('api/users/', include('users.urls')),
+    path('api/tickets/', include('tickets.urls')),
+
+
     # Admin interface
     path('admin/', admin.site.urls),
 
